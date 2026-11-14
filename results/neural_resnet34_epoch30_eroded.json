@@ -1,0 +1,179 @@
+{
+  "date": "2026-11-03",
+  "method": "ResNet34 U-Net with object-balanced crops and seeded growth",
+  "architecture": "resnet34",
+  "sampling": "object",
+  "checkpoint": "checkpoints/filament_resnet34_object_epoch30.pt",
+  "checkpoint_sha256": "12aeab9f918acbf06106589fb48898242bd1bc6cd34221b400cc2895e0598ab9",
+  "train_images": 566,
+  "train_epochs": 30,
+  "training_schedule_epochs": 30,
+  "training_output": "checkpoints/filament_resnet34_object.pt",
+  "learning_rate": 0.0003,
+  "encoder_lr_factor": 0.1,
+  "batch_size": 8,
+  "train_loss": 0.4781402815395678,
+  "train_seconds": 2006.2,
+  "encoder_weights": "checkpoints/pretrained/resnet34-b627a593.pth",
+  "encoder_weights_url": "https://download.pytorch.org/models/resnet34-b627a593.pth",
+  "encoder_weights_sha256": "b627a593bcbe140c234610266fe4f8ae95ea42fc881d091c9b6052e6b1d0590f",
+  "settings": {
+    "threshold": 0.98,
+    "grow_threshold": 0.5,
+    "min_area": 400,
+    "max_area": 40000,
+    "limb_margin": 65
+  },
+  "erosion_radius": 1,
+  "inference_batch_size": 2,
+  "calibration_images": 40,
+  "calibration_pq": 0.3675030294748919,
+  "calibration_preferred_erosion_radius": 0,
+  "erosion_selected_on_full_validation": true,
+  "calibration_file": "results/resnet34_epoch30_calibration.json",
+  "calibration_filenames": [
+    "20131130192134Ch.jpeg",
+    "20110205082634Lh.jpeg",
+    "20160317232434Lh.jpeg",
+    "20211119103130Ch.jpeg",
+    "20181023232430Lh.jpeg",
+    "20150926111934Ch.jpeg",
+    "20170417232530Lh.jpeg",
+    "20121218063534Lh.jpeg",
+    "20131108045254Uh.jpeg",
+    "20180714000010Mh.jpeg",
+    "20150720082014Th.jpeg",
+    "20110406082634Lh.jpeg",
+    "20150314081954Uh.jpeg",
+    "20150617161314Mh.jpeg",
+    "20131025185414Mh.jpeg",
+    "20160714235434Lh.jpeg",
+    "20150228082414Th.jpeg",
+    "20150222112034Ch.jpeg",
+    "20130305112734Ch.jpeg",
+    "20160408232234Lh.jpeg",
+    "20160703133714Th.jpeg",
+    "20110815140454Bh.jpeg",
+    "20160628152654Bh.jpeg",
+    "20120206063134Lh.jpeg",
+    "20200110073230Lh.jpeg",
+    "20181101230010Mh.jpeg",
+    "20160831133714Th.jpeg",
+    "20151224133734Ch.jpeg",
+    "20140508195834Ch.jpeg",
+    "20160110133714Th.jpeg",
+    "20170408133710Th.jpeg",
+    "20170327143550Bh.jpeg",
+    "20130707134154Bh.jpeg",
+    "20110221173814Mh.jpeg",
+    "20140615195854Bh.jpeg",
+    "20160604163414Mh.jpeg",
+    "20210621133650Bh.jpeg",
+    "20170423014350Uh.jpeg",
+    "20130719140154Bh.jpeg",
+    "20171121222130Lh.jpeg"
+  ],
+  "validation_images": 141,
+  "validation_views": 223,
+  "pq": 0.3787999709193191,
+  "iou_sum": 617.0651526275708,
+  "tp": 916,
+  "fp": 765,
+  "fn": 661,
+  "by_size": {
+    "below_400": {
+      "objects": 149,
+      "matched": 12
+    },
+    "400_999": {
+      "objects": 500,
+      "matched": 274
+    },
+    "2500_9999": {
+      "objects": 344,
+      "matched": 231
+    },
+    "1000_2499": {
+      "objects": 545,
+      "matched": 380
+    },
+    "10000_plus": {
+      "objects": 39,
+      "matched": 19
+    }
+  },
+  "by_observatory": {
+    "Ch": {
+      "iou_sum": 99.89433294816898,
+      "tp": 150,
+      "fp": 146,
+      "fn": 131,
+      "pq": 0.3462541869953864
+    },
+    "Mh": {
+      "iou_sum": 77.52335398475793,
+      "tp": 116,
+      "fp": 95,
+      "fn": 88,
+      "pq": 0.37360652522774906
+    },
+    "Lh": {
+      "iou_sum": 126.18284578522857,
+      "tp": 186,
+      "fp": 169,
+      "fn": 120,
+      "pq": 0.38179378452414087
+    },
+    "Th": {
+      "iou_sum": 115.01600928491646,
+      "tp": 169,
+      "fp": 98,
+      "fn": 95,
+      "pq": 0.4332053080411166
+    },
+    "Uh": {
+      "iou_sum": 75.83268870243073,
+      "tp": 114,
+      "fp": 106,
+      "fn": 73,
+      "pq": 0.3726422049259495
+    },
+    "Bh": {
+      "iou_sum": 122.61592192206797,
+      "tp": 181,
+      "fp": 151,
+      "fn": 154,
+      "pq": 0.36766393379930423
+    }
+  },
+  "dates_absent_from_training": {
+    "images": 128,
+    "iou_sum": 554.7008506668553,
+    "tp": 824,
+    "fp": 690,
+    "fn": 591,
+    "pq": 0.37876466416309684
+  },
+  "remaining_validation_images": 101,
+  "remaining_validation_pq": 0.3831916207902984,
+  "remaining_validation_tp": 668,
+  "remaining_validation_fp": 539,
+  "remaining_validation_fn": 471,
+  "model_selection_used_full_validation": true,
+  "public_pq": 0.32,
+  "kaggle_status": "COMPLETE",
+  "submission_file": "outputs/resnet34_epoch30_eroded_submission.csv",
+  "overlay_file": "outputs/resnet34_epoch30_eroded_overlay.png",
+  "notebook_verified": true,
+  "notebook_file": "notebooks/resnet34_pipeline.ipynb",
+  "executed_notebook_file": "outputs/resnet34_pipeline_executed.ipynb",
+  "report_file": "output/pdf/resnet34_methods_report.pdf",
+  "notebook_executed_code_cells": 7,
+  "submission_masks": 1371,
+  "submission_sha256": "45443dc4a54db7ad2519e991ebb73b53882056b7d40898ead04942fe35da2b53",
+  "all_submission_masks_decoded": true,
+  "submission_integrity_file": "results/resnet34_epoch30_eroded_submission_integrity.json",
+  "kaggle_submission_ref": 57955859,
+  "submissions_remaining_after_upload": 2,
+  "kaggle_submitted_at_utc": "2026-11-03T17:37:21.480000"
+}

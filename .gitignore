@@ -1,0 +1,11 @@
+weights/*
+!weights/README.md
+!weights/rescorer_tree_a.txt
+work/
+data/
+__pycache__/
+*.pyc
+.venv/
+report/template_zip/
+report/overleaf_upload.zip
+release_assets/

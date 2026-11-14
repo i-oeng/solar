@@ -1,0 +1,142 @@
+% Content for the organizers' Overleaf template (acmart, sigconf). Paste each block over the
+% gray \guide{...} text of the matching place in main.tex; leave the black text as it is.
+% Upload report/figures/pipeline.pdf and report/figures/examples.pdf to the project.
+% Author block for the template:
+%   \author{Islam Kossymbayev}
+%   \affiliation{\institution{Nazarbayev University}\city{Astana}\country{Kazakhstan}}
+%   \email{islam.kossymbayev@gmail.com}
+% Check the city before you compile.
+
+%%%%%%%%%%%%%%%%%%%% TITLE (replace \guide{Your Title Here}) %%%%%%%%%%%%%%%%%%%%
+% Disk-Scale ConvNeXt and Crop-Level ResNet U-Nets with Exact Candidate Selection
+
+%%%%%%%%%%%%%%%%%%%% ABSTRACT (after the black sentence) %%%%%%%%%%%%%%%%%%%%
+We predict a filament probability map with two groups of U-Nets, twelve ResNet34 models that
+see 512-pixel crops and three ConvNeXt-Tiny models that see the whole solar disk at 1536 pixels,
+and average their flip-augmented outputs. Instances are not cut at one threshold. We cut the map
+at six thresholds, which yields a forest of nested candidate masks, score each candidate with a
+LightGBM regressor that predicts its matched IoU, and choose the best set of disjoint candidates
+exactly by dynamic programming. The score is exact because disjoint candidates make Panoptic
+Quality additive over candidates. On 707 training images, scored out of fold with date-grouped
+folds, this reaches PQ 0.443, against 0.379 for a single ResNet34 with the plain hysteresis rule.
+The public leaderboard score is 0.38.
+
+%%%%%%%%%%%%%%%%%%%% 1 INTRODUCTION (replace the gray sentence) %%%%%%%%%%%%%%%%%%%%
+Our entry has three parts: a probability map from an ensemble of U-Nets
+(Section~\ref{sec:method}), a candidate forest with exact selection that targets the metric
+directly, and a validation protocol that keeps every number out of fold
+(Section~\ref{sec:eval}). We only used the competition training annotations. Test images were
+never labelled and never used for training, and no external filament annotations were used.
+The whole-disk ConvNeXt model follows ideas of a public entry
+(github.com/pragyaangaur/NSO-Solar-Filament-Challenge); the code was written from scratch.
+The encoders are ImageNet-pretrained timm and torchvision weights.
+
+%%%%%%%%%%%%%%%%%%%% 2 METHODOLOGY (replace the gray list) %%%%%%%%%%%%%%%%%%%%
+\label{sec:method}
+Figure~\ref{fig:pipeline} shows the pipeline.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{pipeline.pdf}
+\caption{End-to-end pipeline for one test image.}
+\label{fig:pipeline}
+\end{figure}
+
+\paragraph{Data and splits.}
+The 707 training images (1154 annotator views, 8199 filaments) are split into three folds
+grouped by calendar date, so same-day images never cross folds. Every development number below
+is out of fold: an image is scored only by models trained on the other two folds. Test maps use
+all models. A training sample uses one random annotator view of its image.
+
+\paragraph{Crop-level ResNet34 U-Net.}
+Input channels are intensity and a local contrast response (Gaussian background, $\sigma=20$,
+minus the image, scaled to $[-1,1]$). Training uses 512-pixel crops centred near annotated
+filaments, flips, BCE with positive weight 10 plus soft Dice, AdamW, and 30 epochs. Each fold has
+four members (two seeds, two view-sampling rules), twelve models in total. Inference uses 512-pixel
+tiles with Hann blending and four flip augmentations.
+
+\paragraph{Whole-disk ConvNeXt U-Net.}
+The full disk is resized to 1024 pixels for 30 epochs and then to 1536 pixels for 24 epochs
+(ConvNeXt-Tiny encoder, five-block decoder). Besides the filament output, a second output
+predicts instance boundaries (weight 0.2). We use flips and rotations by 90$^\circ$, photometric
+and noise augmentation, AdamW with warmup and cosine decay, and an EMA of the weights. One model per
+fold gives three models. Flip-averaged predictions are resized back to 2048 pixels.
+
+\paragraph{Candidate forest and exact selection.}
+Let $p$ be the average of the ResNet group and the ConvNeXt group. For each grow threshold in
+$\{0.3,\dots,0.8\}$ we close the mask with a $3\times3$ ellipse, keep 8-connected components of
+at least 30 pixels inside the disk minus a 65-pixel limb band, and erode each by one pixel.
+Thresholding and closing are increasing, so each component lies inside exactly one component of
+the next lower threshold, and the candidates of an image form a forest. Two candidates that are
+not nested stay disjoint, hence any set without nested pairs (an antichain) is a valid
+non-overlapping prediction, and a ground-truth filament exceeds IoU 0.5 with at most one of its
+members.
+
+Then PQ is additive. Keeping a candidate seen by $n$ annotator views adds its matched IoU sum
+to the numerator and $n/2$ to the denominator. With target PQ $=2t$, the best antichain maximises
+$\sum (\hat s - t)$ over kept candidates, where $\hat s$ is the candidate's mean matched IoU per
+view. A LightGBM regressor predicts $\hat s$ from 24 features (probability statistics, seed
+sizes, shape, contrast against a surrounding ring, radial position, observatory, and four tree
+features: level, area over parent, number of children, largest child fraction). A dynamic program
+over each forest returns the exact maximiser. The threshold $t$ is chosen by date-grouped inner
+cross-validation on the training folds only. The kept masks are written as COCO RLE.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{examples.pdf}
+\caption{Three test images (no labels exist for them): blended probability (top) and the
+selected instances of the submitted file (bottom).}
+\label{fig:examples}
+\end{figure*}
+
+%%%%%%%%%%%%%%%%%%%% 3 EVALUATION (replace the gray list) %%%%%%%%%%%%%%%%%%%%
+\label{sec:eval}
+\paragraph{Strategy.}
+PQ follows the organizers' notebook (match at IoU $>0.5$, every annotator view scored against
+the same prediction, counts pooled). Intervals are paired 95\% bootstrap intervals over
+calendar dates (10{,}000 replicates). All choices were fixed on the development folds, and the
+threshold is learned inside the training folds.
+
+\begin{table}[t]
+\caption{Out-of-fold PQ on 707 training images. $\Delta$ is the gain over the row above, with a
+paired date-bootstrap 95\% interval. Public PQ is given where a file was submitted.}
+\label{tab:results}
+\small
+\begin{tabular}{@{}p{3.6cm}rrr@{}}
+\toprule
+Method & PQ & $\Delta$ [95\% CI] & Public \\
+\midrule
+ResNet34, single, rule & 0.379 & & 0.32 \\
+12 ResNet34, flip, rule & 0.396 & & \\
++ LightGBM scorer & 0.422 & +0.027 [+0.022, +0.031] & 0.36$^{\ast}$ \\
+ConvNeXt 1536 + scorer & 0.425 & & \\
+ResNet + ConvNeXt, scorer & 0.440 & +0.017 [+0.013, +0.022] & \\
++ multi-threshold forest & 0.443 & +0.005 [+0.002, +0.008] & 0.38 \\
+\midrule
++ second ConvNeXt (negative) & 0.441 & $-$0.003 & \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+{\footnotesize $^{\ast}$ six-model ensemble. The first row is the mean of members, no augmentation.
+The second row is for four-member fold ensembles. The forest result varied between 0.4434 and
+0.4443 over two runs of the same code (LightGBM nondeterminism); the gain over the single
+threshold is positive in all three folds.}
+\end{table}
+
+\paragraph{Results.}
+Table~\ref{tab:results} lists the steps. The largest gain comes from replacing the hand rule with
+the scorer, which recovers filaments whose seed falls below the old 0.98 requirement. The disk-scale
+ConvNeXt is as good alone as the whole ResNet ensemble with the scorer, and the two are
+complementary. The forest raises the ceiling of selection (true-IoU oracle) from about 0.50 to 0.55,
+but the scorer captures only a small part of that, so the net gain is small. A second ConvNeXt
+(different pretraining, 1024 px) did not help in any selection setting.
+
+\paragraph{Strengths and weaknesses.}
+The selection is exact for the metric, adds no hand-tuned size or seed rule, and its threshold is
+learned without touching held-out folds. Public PQ has stayed near 0.85 times development PQ so far (0.32 against 0.379, 0.36 against 0.419, 0.38 against 0.443);
+we have not isolated the cause. Weaknesses: the scorer, not the segmentation
+network, is now the bottleneck (oracle 0.55 against 0.443 achieved). Thin, faint filaments lack a
+reliable candidate, and merges of touching filaments are only fixed when a higher threshold splits
+them. Further ideas: instance-aware losses that train on candidate quality directly, a scorer with
+image-level context, and more diverse encoders.
